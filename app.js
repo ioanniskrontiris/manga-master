@@ -763,17 +763,22 @@ async function fetchAwardData() {
   const headers = { 'Accept': 'application/sparql-results+json' };
 
   try {
-    const response = await fetch(fullUrl, { headers });
-    if (!response.ok) throw new Error('Wikidata fetch failed!');
+  const response = await fetch(fullUrl, { headers });
+  if (!response.ok) throw new Error('Wikidata fetch failed!');
 
-    const data = await response.json();
-    const awardsData = data.results.bindings.map(item => ({
-      title: item.mangaLabel.value,
-      award: item.awardLabel.value,
-      year: item.awardYear && item.awardYear.value
-        ? item.awardYear.value.split('T')[0]
-        : 'Unknown'
-    }));
+  const data = await response.json();
+
+  // 🔥 Log the raw JSON data to see what's coming back
+  console.log('Raw Wikidata Response:', data);
+
+  const awardsData = data.results.bindings.map(item => ({
+    title: item.mangaLabel.value,
+    award: item.awardLabel.value,
+    year: item.awardYear && item.awardYear.value
+      ? item.awardYear.value.split('T')[0]
+      : 'Unknown'
+  }));
+
 
     console.log('Fetched award data:', awardsData);
 
