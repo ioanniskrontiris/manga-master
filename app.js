@@ -647,6 +647,7 @@ function translatePage() {
 // Fetch top manga from Jikan API
 async function fetchTopManga() {
   try {
+    // Fetch top manga data
     const response = await fetch('https://api.jikan.moe/v4/top/manga?filter=bypopularity&limit=10');
     const data = await response.json();
 
@@ -654,15 +655,15 @@ async function fetchTopManga() {
     const topManga = data.data.map(item => ({
       id: item.mal_id,
       title: item.title,
-      titleDE: item.title, // No German titles in API
+      titleDE: item.title, // No German titles from API
       author: item.authors && item.authors[0] ? item.authors[0].name : 'Unknown',
       genre: item.genres.map(g => g.name),
       rating: item.score || 0,
       year: item.published.prop.from.year || 'Unknown',
       status: item.status,
-      awards: [], // No award data from Jikan
+      awards: [], // No awards data from Jikan
       description: item.synopsis,
-      descriptionDE: item.synopsis, // No DE translations in API
+      descriptionDE: item.synopsis, // No German from API
       image: item.images.jpg.image_url,
       popularity: item.popularity || 0,
       affiliate: {
@@ -671,13 +672,33 @@ async function fetchTopManga() {
       }
     }));
 
-    // Replace hardcoded data
+    // Update app data
     appData.featuredManga = topManga.slice(0, 3);
     appData.allManga = topManga;
+
+    // Generate dynamic genres
+    const genreSet = new Set();
+    topManga.forEach(manga => {
+      manga.genre.forEach(genre => genreSet.add(genre));
+    });
+    appData.genres = Array.from(genreSet).sort();
+
+    // Populate the genre filter dropdown
+    const genreFilter = document.getElementById('genreFilter');
+    if (genreFilter) {
+      genreFilter.innerHTML = '<option value="">All Genres</option>';
+      appData.genres.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre;
+        option.textContent = genre;
+        genreFilter.appendChild(option);
+      });
+    }
 
     // Refresh UI
     initCarousel();
     populateMangaGrids();
+
   } catch (error) {
     console.error('Error fetching top manga:', error);
   }
