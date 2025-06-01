@@ -272,40 +272,43 @@ const applicationData = {
 };
 
 // Initialize the application
-function initApp() {
-    // Load data
-   // Load translations and other static data
-appData.genres = applicationData.genres;
-appData.awards = applicationData.awards;
-appData.translations = applicationData.translations;
+// Initialize the application
+async function initApp() {
+  // Load static data
+  appData.genres = applicationData.genres;
+  appData.awards = applicationData.awards;
+  appData.translations = applicationData.translations;
 
-// Fetch real manga data
-fetchTopManga();
-fetchAwardData();
-    
-    // Set theme
-    document.documentElement.setAttribute('data-color-scheme', appData.currentTheme);
-    updateThemeIcon();
-    
-    // Set language from URL parameter or localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get('lang');
-    if (langParam && ['en', 'de'].includes(langParam)) {
-        appData.currentLanguage = langParam;
-    } else {
-        appData.currentLanguage = localStorage.getItem('language') || 'en';
-    }
-    
-    DOM.languageSelector.value = appData.currentLanguage;
-    translatePage();
-    
-    // Initialize UI components
-    initCarousel();
-    populateFilters();
-    populateMangaGrids();
-    
-    // Set up event listeners
-    setupEventListeners();
+  // Set theme
+  document.documentElement.setAttribute('data-color-scheme', appData.currentTheme);
+  updateThemeIcon();
+
+  // Set language from URL parameter or localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const langParam = urlParams.get('lang');
+  if (langParam && ['en', 'de'].includes(langParam)) {
+    appData.currentLanguage = langParam;
+  } else {
+    appData.currentLanguage = localStorage.getItem('language') || 'en';
+  }
+
+  DOM.languageSelector.value = appData.currentLanguage;
+  translatePage();
+
+  // Show loading in Featured Award Winners
+  DOM.awardWinners.innerHTML = '<p>Loading award-winning manga...</p>';
+
+  // Fetch real manga data
+  await fetchTopManga();       // wait for top manga
+  await fetchAwardData();      // then wait for awards
+
+  // Initialize UI components
+  initCarousel();
+  populateFilters();
+  populateMangaGrids();
+
+  // Set up event listeners
+  setupEventListeners();
 }
 
 // Initialize carousel with featured manga
@@ -744,8 +747,8 @@ async function fetchAwardData() {
   const endpointUrl = 'https://query.wikidata.org/sparql';
   const sparqlQuery = `
     SELECT ?mangaLabel ?awardLabel ?awardYear WHERE {
-      ?manga wdt:P31 wd:Q8274;     # instance of manga
-             wdt:P166 ?award.      # received an award
+      ?manga wdt:P31 wd:Q8274;
+             wdt:P166 ?award.
       ?award rdfs:label ?awardLabel.
       ?manga rdfs:label ?mangaLabel.
       OPTIONAL { ?manga p:P166 ?awardStatement.
@@ -761,9 +764,9 @@ async function fetchAwardData() {
 
   try {
     const response = await fetch(fullUrl, { headers });
-    const data = await response.json();
+    if (!response.ok) throw new Error('Wikidata fetch failed!');
 
-    // Transform into your app's format
+    const data = await response.json();
     const awardsData = data.results.bindings.map(item => ({
       title: item.mangaLabel.value,
       award: item.awardLabel.value,
@@ -774,7 +777,7 @@ async function fetchAwardData() {
 
     console.log('Fetched award data:', awardsData);
 
-    // Merge awards into appData.allManga by title match (case insensitive)
+    // Merge awards into appData.allManga
     awardsData.forEach(awardEntry => {
       const matchingManga = appData.allManga.find(manga =>
         manga.title.toLowerCase() === awardEntry.title.toLowerCase()
@@ -789,31 +792,29 @@ async function fetchAwardData() {
 
     console.log('Awards merged into appData.allManga!');
 
-    // Now update the Featured Award Winners section dynamically
+    // Populate Featured Award Winners
     const awardWinners = appData.allManga.filter(manga => manga.awards.length > 0);
-
-    const awardWinnersContainer = document.getElementById('awardWinners');
-    awardWinnersContainer.innerHTML = ''; // Clear any existing content
-
-    awardWinners.forEach(manga => {
-      const card = document.createElement('div');
-      card.classList.add('manga-card');
-
-      card.innerHTML = `
-        <img src="${manga.image}" alt="${manga.title} cover">
-        <h4>${manga.title}</h4>
-        <p><strong>Author:</strong> ${manga.author}</p>
-        <p><strong>Awards:</strong> ${manga.awards.join(', ')}</p>
-        <p><strong>Score:</strong> <span class="score-badge">${manga.mangaMasterScore}</span></p>
-      `;
-
-      awardWinnersContainer.appendChild(card);
-    });
-
-    console.log('Featured Award Winners updated!');
+    if (awardWinners.length > 0) {
+      DOM.awardWinners.innerHTML = ''; // clear loading text
+      awardWinners.forEach(manga => {
+        const card = document.createElement('div');
+        card.classList.add('manga-card');
+        card.innerHTML = `
+          <img src="${manga.image}" alt="${manga.title} cover">
+          <h4>${manga.title}</h4>
+          <p><strong>Author:</strong> ${manga.author}</p>
+          <p><strong>Awards:</strong> ${manga.awards.join(', ')}</p>
+          <p><strong>Score:</strong> <span class="score-badge">${manga.mangaMasterScore}</span></p>
+        `;
+        DOM.awardWinners.appendChild(card);
+      });
+    } else {
+      DOM.awardWinners.innerHTML = '<p>No award-winning manga found at this time.</p>';
+    }
 
   } catch (error) {
     console.error('Error fetching award data:', error);
+    DOM.awardWinners.innerHTML = '<p>Could not load award data at this time. Please try again later.</p>';
   }
 }
 
