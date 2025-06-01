@@ -768,31 +768,49 @@ async function fetchAwardData() {
       title: item.mangaLabel.value,
       award: item.awardLabel.value,
       year: item.awardYear && item.awardYear.value
-  ? item.awardYear.value.split('T')[0]  // Just the date part
-  : 'Unknown'
+        ? item.awardYear.value.split('T')[0]
+        : 'Unknown'
     }));
 
-    // Update appData.awards for consistency with your app
-    appData.awards = awardsData;
+    console.log('Fetched award data:', awardsData);
 
-    // Populate the Award Winners section
+    // Merge awards into appData.allManga by title match (case insensitive)
+    awardsData.forEach(awardEntry => {
+      const matchingManga = appData.allManga.find(manga =>
+        manga.title.toLowerCase() === awardEntry.title.toLowerCase()
+      );
+      if (matchingManga) {
+        if (!matchingManga.awards) {
+          matchingManga.awards = [];
+        }
+        matchingManga.awards.push(`${awardEntry.award} (${awardEntry.year})`);
+      }
+    });
+
+    console.log('Awards merged into appData.allManga!');
+
+    // Now update the Featured Award Winners section dynamically
+    const awardWinners = appData.allManga.filter(manga => manga.awards.length > 0);
+
     const awardWinnersContainer = document.getElementById('awardWinners');
     awardWinnersContainer.innerHTML = ''; // Clear any existing content
 
-    awardsData.forEach(entry => {
+    awardWinners.forEach(manga => {
       const card = document.createElement('div');
       card.classList.add('manga-card');
 
       card.innerHTML = `
-        <h4>${entry.title}</h4>
-        <p><strong>Award:</strong> ${entry.award}</p>
-        <p><strong>Year:</strong> ${entry.year}</p>
+        <img src="${manga.image}" alt="${manga.title} cover">
+        <h4>${manga.title}</h4>
+        <p><strong>Author:</strong> ${manga.author}</p>
+        <p><strong>Awards:</strong> ${manga.awards.join(', ')}</p>
+        <p><strong>Score:</strong> <span class="score-badge">${manga.mangaMasterScore}</span></p>
       `;
 
       awardWinnersContainer.appendChild(card);
     });
 
-    console.log('Award data fetched and displayed successfully!');
+    console.log('Featured Award Winners updated!');
 
   } catch (error) {
     console.error('Error fetching award data:', error);
