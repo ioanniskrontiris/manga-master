@@ -274,11 +274,13 @@ const applicationData = {
 // Initialize the application
 function initApp() {
     // Load data
-    appData.featuredManga = applicationData.featuredManga;
-    appData.allManga = applicationData.allManga;
-    appData.genres = applicationData.genres;
-    appData.awards = applicationData.awards;
-    appData.translations = applicationData.translations;
+   // Load translations and other static data
+appData.genres = applicationData.genres;
+appData.awards = applicationData.awards;
+appData.translations = applicationData.translations;
+
+// Fetch real manga data
+fetchTopManga();
     
     // Set theme
     document.documentElement.setAttribute('data-color-scheme', appData.currentTheme);
@@ -642,5 +644,43 @@ function translatePage() {
     });
 }
 
+// Fetch top manga from Jikan API
+async function fetchTopManga() {
+  try {
+    const response = await fetch('https://api.jikan.moe/v4/top/manga?filter=bypopularity&limit=10');
+    const data = await response.json();
+
+    // Transform API data into your app's format
+    const topManga = data.data.map(item => ({
+      id: item.mal_id,
+      title: item.title,
+      titleDE: item.title, // No German titles in API
+      author: item.authors && item.authors[0] ? item.authors[0].name : 'Unknown',
+      genre: item.genres.map(g => g.name),
+      rating: item.score || 0,
+      year: item.published.prop.from.year || 'Unknown',
+      status: item.status,
+      awards: [], // No award data from Jikan
+      description: item.synopsis,
+      descriptionDE: item.synopsis, // No DE translations in API
+      image: item.images.jpg.image_url,
+      popularity: item.popularity || 0,
+      affiliate: {
+        amazon: `https://www.amazon.com/s?k=${encodeURIComponent(item.title + ' manga')}`,
+        bookshop: `https://bookshop.org/search?keywords=${encodeURIComponent(item.title + ' manga')}`
+      }
+    }));
+
+    // Replace hardcoded data
+    appData.featuredManga = topManga.slice(0, 3);
+    appData.allManga = topManga;
+
+    // Refresh UI
+    initCarousel();
+    populateMangaGrids();
+  } catch (error) {
+    console.error('Error fetching top manga:', error);
+  }
+}
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', initApp);
