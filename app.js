@@ -384,20 +384,26 @@ function populateFilters() {
 
 // Populate manga grids
 function populateMangaGrids() {
-    // Award winners
-    const awardWinners = [...appData.featuredManga, ...appData.allManga].filter(manga => manga.awards.length > 0);
-    renderMangaGrid(DOM.awardWinners, awardWinners);
-    
-    // Popular manga (sort by popularity)
-    const popularManga = [...appData.featuredManga, ...appData.allManga].sort((a, b) => b.popularity - a.popularity).slice(0, 6);
-    renderMangaGrid(DOM.popularManga, popularManga);
-    
-    // Hidden gems (lower popularity but high rating)
-    const hiddenGems = [...appData.featuredManga, ...appData.allManga]
-        .filter(manga => manga.popularity < 85 && manga.rating >= 8.5)
-        .sort((a, b) => b.rating - a.rating)
-        .slice(0, 3);
-    renderMangaGrid(DOM.hiddenGems, hiddenGems);
+  // Sort everything by MangaMaster Score, highest first
+  const sortedManga = [...appData.featuredManga, ...appData.allManga]
+    .sort((a, b) => b.mangaMasterScore - a.mangaMasterScore);
+
+  // Award winners (must have at least 1 award)
+  const awardWinners = sortedManga.filter(manga => manga.awards.length > 0);
+  renderMangaGrid(DOM.awardWinners, awardWinners);
+
+  // Popular manga (top 6 by MangaMaster Score)
+  const popularManga = sortedManga.slice(0, 6);
+  renderMangaGrid(DOM.popularManga, popularManga);
+
+  // Hidden gems: lower popularity but high rating and high MangaMaster Score
+  const hiddenGems = sortedManga
+    .filter(manga => manga.popularity < 85 && manga.rating >= 8.5)
+    .sort((a, b) => b.mangaMasterScore - a.mangaMasterScore)
+    .slice(0, 3);
+  renderMangaGrid(DOM.hiddenGems, hiddenGems);
+
+  console.log('Manga grids populated using MangaMaster Scores!');
 }
 
 // Render manga grid
@@ -652,26 +658,34 @@ async function fetchTopManga() {
     const response = await fetch('https://api.jikan.moe/v4/top/manga?filter=bypopularity&limit=10');
     const data = await response.json();
 
-    // Transform API data into your app's format
-    const topManga = data.data.map(item => ({
-      id: item.mal_id,
-      title: item.title,
-      titleDE: item.title, // No German titles from API
-      author: item.authors && item.authors[0] ? item.authors[0].name : 'Unknown',
-      genre: item.genres.map(g => g.name),
-      rating: item.score || 0,
-      year: item.published.prop.from.year || 'Unknown',
-      status: item.status,
-      awards: [], // No awards data from Jikan
-      description: item.synopsis,
-      descriptionDE: item.synopsis, // No German from API
-      image: item.images.jpg.image_url,
-      popularity: item.popularity || 0,
-      affiliate: {
-        amazon: `https://www.amazon.com/s?k=${encodeURIComponent(item.title + ' manga')}`,
-        bookshop: `https://bookshop.org/search?keywords=${encodeURIComponent(item.title + ' manga')}`
-      }
-    }));
+    // Transform API data into your app's format and calculate MangaMaster Score
+    const topManga = data.data.map(item => {
+      const manga = {
+        id: item.mal_id,
+        title: item.title,
+        titleDE: item.title, // No German titles from API
+        author: item.authors && item.authors[0] ? item.authors[0].name : 'Unknown',
+        genre: item.genres.map(g => g.name),
+        rating: item.score || 0,
+        year: item.published.prop.from.year || 'Unknown',
+        status: item.status,
+        awards: [], // No awards data from Jikan
+        description: item.synopsis,
+        descriptionDE: item.synopsis, // No German from API
+        image: item.images.jpg.image_url,
+        popularity: item.popularity || 0,
+        hiddenGem: false, // Set manually if you want
+        affiliate: {
+          amazon: `https://www.amazon.com/s?k=${encodeURIComponent(item.title + ' manga')}`,
+          bookshop: `https://bookshop.org/search?keywords=${encodeURIComponent(item.title + ' manga')}`
+        }
+      };
+
+      // Calculate and add MangaMaster Score
+      manga.mangaMasterScore = calculateMangaMasterScore(manga);
+
+      return manga;
+    });
 
     // Update app data
     appData.featuredManga = topManga.slice(0, 3);
@@ -700,9 +714,27 @@ async function fetchTopManga() {
     initCarousel();
     populateMangaGrids();
 
+    console.log('Top manga data fetched and processed with MangaMaster Scores!');
+
   } catch (error) {
     console.error('Error fetching top manga:', error);
   }
+}
+
+function createMangaCard(manga) {
+  const card = document.createElement('div');
+  card.classList.add('manga-card');
+
+  card.innerHTML = `
+    <img src="${manga.image}" alt="${manga.title} cover">
+    <h4>${manga.title}</h4>
+    <p><strong>Author:</strong> ${manga.author}</p>
+    <p><strong>Genres:</strong> ${manga.genre.join(', ')}</p>
+    <p><strong>Rating:</strong> ${manga.rating}</p>
+    <p><strong>MangaMaster Score:</strong> <span class="score-badge">${manga.mangaMasterScore}</span></p>
+  `;
+
+  return card;
 }
 
 async function fetchAwardData() {
@@ -762,6 +794,43 @@ async function fetchAwardData() {
   } catch (error) {
     console.error('Error fetching award data:', error);
   }
+}
+
+function calculateMangaMasterScore(manga) {
+  let score = 0;
+
+  // User Rating (0–10 scaled to 0–100)
+  if (manga.rating) {
+    score += manga.rating * 10;
+  }
+
+  // Awards boost
+  if (manga.awards && manga.awards.length > 0) {
+    const awardFactor = 15;
+    score += manga.awards.length * awardFactor;
+  }
+
+  // Popularity rank boost (inverse: lower rank = higher score)
+  if (manga.popularity) {
+    const popularityBoost = 0.5;
+    score += (100 - manga.popularity) * popularityBoost;
+  }
+
+  // Hidden Gem boost (if marked by editors)
+  if (manga.hiddenGem) {
+    score += 20;
+  }
+
+  // Freshness factor: newer awards get a small boost
+  if (manga.awardYear && manga.awardYear !== 'Unknown') {
+    const currentYear = new Date().getFullYear();
+    const awardAge = currentYear - parseInt(manga.awardYear);
+    const freshnessBoost = awardAge < 5 ? (5 - awardAge) * 2 : 0;
+    score += freshnessBoost;
+  }
+
+  // Cap at 100 for consistency
+  return Math.min(100, Math.round(score));
 }
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', initApp);
