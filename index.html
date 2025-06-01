@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-color-scheme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaMaster - Discover the World's Best Manga</title>
+    <meta name="description" content="Discover award-winning and critically acclaimed manga series from around the globe. Find your next favorite manga with our comprehensive recommendations.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <div class="header__logo">
+                    <h1 class="logo" data-translate="siteName">MangaMaster</h1>
+                </div>
+                
+                <nav class="header__nav">
+                    <ul class="nav-list">
+                        <li><a href="#home" data-translate="nav.home">Home</a></li>
+                        <li><a href="#awards" data-translate="nav.awards">Awards</a></li>
+                        <li><a href="#browse" data-translate="nav.browse">Browse</a></li>
+                        <li><a href="#about" data-translate="nav.about">About</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header__actions">
+                    <select id="languageSelector" class="language-selector" aria-label="Select Language">
+                        <option value="en">EN</option>
+                        <option value="de">DE</option>
+                    </select>
+                    
+                    <button id="themeToggle" class="theme-toggle btn btn--outline" aria-label="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero__content">
+                <h2 class="hero__title" data-translate="hero.title">Discover the World's Best Manga</h2>
+                <p class="hero__subtitle" data-translate="hero.subtitle">Award-winning and critically acclaimed series from around the globe</p>
+                
+                <div class="hero__carousel">
+                    <div class="carousel-container">
+                        <div class="carousel-track" id="carouselTrack">
+                            <!-- Featured manga will be populated by JavaScript -->
+                        </div>
+                        <button class="carousel-btn carousel-btn--prev" id="carouselPrev" aria-label="Previous">‹</button>
+                        <button class="carousel-btn carousel-btn--next" id="carouselNext" aria-label="Next">›</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search and Filter Section -->
+    <section class="search-section">
+        <div class="container">
+            <h3 class="section-title" data-translate="sections.search">Search Manga</h3>
+            
+            <div class="search-container">
+                <div class="search-input-group">
+                    <input type="text" id="searchInput" class="form-control search-input" placeholder="Search for manga titles, authors, or genres...">
+                    <button class="btn btn--primary search-btn" id="searchBtn" data-translate="buttons.search">Search</button>
+                </div>
+                
+                <div class="filters">
+                    <h4 data-translate="sections.filter">Filter Results</h4>
+                    
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label class="form-label" data-translate="filters.genre">Genre</label>
+                            <select id="genreFilter" class="form-control">
+                                <option value="">All Genres</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="form-label" data-translate="filters.rating">Minimum Rating</label>
+                            <select id="ratingFilter" class="form-control">
+                                <option value="">Any Rating</option>
+                                <option value="8.0">8.0+</option>
+                                <option value="8.5">8.5+</option>
+                                <option value="9.0">9.0+</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="form-label" data-translate="filters.status">Status</label>
+                            <select id="statusFilter" class="form-control">
+                                <option value="">All Status</option>
+                                <option value="Ongoing">Ongoing</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="form-label" data-translate="filters.awards">Awards</label>
+                            <select id="awardsFilter" class="form-control">
+                                <option value="">All Awards</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Award Winners Section -->
+    <section id="awards" class="awards-section">
+        <div class="container">
+            <h3 class="section-title" data-translate="sections.featured">Featured Award Winners</h3>
+            <div class="manga-grid" id="awardWinners">
+                <!-- Award-winning manga will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Recommendations Section -->
+    <section id="browse" class="popular-section">
+        <div class="container">
+            <h3 class="section-title" data-translate="sections.popular">Popular Recommendations</h3>
+            <div class="manga-grid" id="popularManga">
+                <!-- Popular manga will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Hidden Gems Section -->
+    <section class="hidden-gems-section">
+        <div class="container">
+            <h3 class="section-title" data-translate="sections.hidden">Hidden Gems</h3>
+            <div class="manga-grid" id="hiddenGems">
+                <!-- Hidden gems will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Manga Detail Modal -->
+    <div id="mangaModal" class="modal" aria-hidden="true">
+        <div class="modal__backdrop" id="modalBackdrop"></div>
+        <div class="modal__content">
+            <button class="modal__close" id="modalClose" aria-label="Close modal">&times;</button>
+            <div class="modal__body" id="modalBody">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="about" class="footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__section">
+                    <h4 data-translate="siteName">MangaMaster</h4>
+                    <p data-translate="footer.mission">Supporting quality manga and independent bookstores worldwide.</p>
+                </div>
+                
+                <div class="footer__section">
+                    <h5>Quick Links</h5>
+                    <ul class="footer__links">
+                        <li><a href="#home" data-translate="nav.home">Home</a></li>
+                        <li><a href="#awards" data-translate="nav.awards">Awards</a></li>
+                        <li><a href="#browse" data-translate="nav.browse">Browse</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__section">
+                    <h5>Affiliate Disclosure</h5>
+                    <p class="footer__disclaimer" data-translate="footer.affiliate">This site contains affiliate links. We earn commission from qualifying purchases.</p>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <p>&copy; 2025 MangaMaster. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
