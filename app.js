@@ -777,18 +777,19 @@ async function fetchAwardData() {
 
     console.log('Fetched award data:', awardsData);
 
-    // Merge awards into appData.allManga
-    awardsData.forEach(awardEntry => {
-      const matchingManga = appData.allManga.find(manga =>
-        manga.title.toLowerCase() === awardEntry.title.toLowerCase()
-      );
-      if (matchingManga) {
-        if (!matchingManga.awards) {
-          matchingManga.awards = [];
-        }
-        matchingManga.awards.push(`${awardEntry.award} (${awardEntry.year})`);
-      }
-    });
+   // Merge awards into appData.allManga by loose title match
+awardsData.forEach(awardEntry => {
+  const matchingManga = appData.allManga.find(manga =>
+    manga.title.toLowerCase().includes(awardEntry.title.toLowerCase()) ||
+    awardEntry.title.toLowerCase().includes(manga.title.toLowerCase())
+  );
+  if (matchingManga) {
+    if (!matchingManga.awards) {
+      matchingManga.awards = [];
+    }
+    matchingManga.awards.push(`${awardEntry.award} (${awardEntry.year})`);
+  }
+});
 
     console.log('Awards merged into appData.allManga!');
 
