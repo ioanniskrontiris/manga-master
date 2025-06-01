@@ -281,6 +281,7 @@ appData.translations = applicationData.translations;
 
 // Fetch real manga data
 fetchTopManga();
+fetchAwardData();
     
     // Set theme
     document.documentElement.setAttribute('data-color-scheme', appData.currentTheme);
@@ -701,6 +702,63 @@ async function fetchTopManga() {
 
   } catch (error) {
     console.error('Error fetching top manga:', error);
+  }
+}
+
+async function fetchAwardData() {
+  const endpointUrl = 'https://query.wikidata.org/sparql';
+  const sparqlQuery = `
+    SELECT ?mangaLabel ?awardLabel ?awardYear WHERE {
+      ?manga wdt:P31 wd:Q8274;     # instance of manga
+             wdt:P166 ?award.      # received an award
+      ?award rdfs:label ?awardLabel.
+      ?manga rdfs:label ?mangaLabel.
+      OPTIONAL { ?manga p:P166 ?awardStatement.
+                  ?awardStatement pq:P585 ?awardYear. }
+      FILTER(LANG(?awardLabel) = "en")
+      FILTER(LANG(?mangaLabel) = "en")
+    }
+    LIMIT 50
+  `;
+
+  const fullUrl = endpointUrl + '?query=' + encodeURIComponent(sparqlQuery);
+  const headers = { 'Accept': 'application/sparql-results+json' };
+
+  try {
+    const response = await fetch(fullUrl, { headers });
+    const data = await response.json();
+
+    // Transform into your app's format
+    const awardsData = data.results.bindings.map(item => ({
+      title: item.mangaLabel.value,
+      award: item.awardLabel.value,
+      year: item.awardYear ? item.awardYear.value : 'Unknown'
+    }));
+
+    // Update appData.awards for consistency with your app
+    appData.awards = awardsData;
+
+    // Populate the Award Winners section
+    const awardWinnersContainer = document.getElementById('awardWinners');
+    awardWinnersContainer.innerHTML = ''; // Clear any existing content
+
+    awardsData.forEach(entry => {
+      const card = document.createElement('div');
+      card.classList.add('manga-card');
+
+      card.innerHTML = `
+        <h4>${entry.title}</h4>
+        <p><strong>Award:</strong> ${entry.award}</p>
+        <p><strong>Year:</strong> ${entry.year}</p>
+      `;
+
+      awardWinnersContainer.appendChild(card);
+    });
+
+    console.log('Award data fetched and displayed successfully!');
+
+  } catch (error) {
+    console.error('Error fetching award data:', error);
   }
 }
 // Initialize application when DOM is loaded
