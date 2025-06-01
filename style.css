@@ -476,14 +476,14 @@ select.form-control {
 
 /* MangaMaster Score badge */
 .score-badge {
-  background-color: #facc15; /* Bright yellow for good contrast */
-  color: #000; /* Black text for readability */
-  border-radius: var(--radius-sm);
+  background-color: #facc15; /* yellow */
+  color: #000; /* black text */
+  border-radius: 4px;
   padding: 0.2em 0.5em;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xs);
+  font-weight: bold;
+  font-size: 0.8rem;
   display: inline-block;
-  margin-left: var(--space-8);
+  margin-top: 0.5em;
 }
 
 /* Status indicators - simplified with CSS variables */

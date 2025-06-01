@@ -408,52 +408,53 @@ function populateMangaGrids() {
 
 // Render manga grid
 function renderMangaGrid(container, mangaList) {
-    container.innerHTML = '';
-    
-    mangaList.forEach(manga => {
-        const card = document.createElement('div');
-        card.className = 'manga-card';
-        card.setAttribute('data-id', manga.id);
-        
-        const title = appData.currentLanguage === 'de' && manga.titleDE ? manga.titleDE : manga.title;
-        
-        card.innerHTML = `
-            <img class="manga-card__image" src="${manga.image}" alt="${title}">
-            <div class="manga-card__content">
-                <h4 class="manga-card__title">${title}</h4>
-                <p class="manga-card__author">${manga.author}</p>
-                
-                <div class="manga-card__genres">
-                    ${manga.genre.slice(0, 3).map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
-                </div>
-                
-                <div class="manga-card__meta">
-                    <div class="rating">
-                        <span class="stars">★★★★★</span>
-                        <span>${manga.rating.toFixed(1)}</span>
-                    </div>
-                    ${manga.awards.length > 0 ? `
-                        <div class="award-badge">
-                            ${manga.awards[0]}
-                        </div>
-                    ` : ''}
-                </div>
-                
-                <div class="manga-card__actions">
-                    <a href="${manga.affiliate.amazon}" class="btn affiliate-btn affiliate-btn--amazon" target="_blank">
-                        ${getTranslation('buttons.buyAmazon')}
-                    </a>
-                    <a href="${manga.affiliate.bookshop}" class="btn affiliate-btn affiliate-btn--bookshop" target="_blank">
-                        ${getTranslation('buttons.buyBookshop')}
-                    </a>
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(card);
-    });
-}
+  container.innerHTML = '';
 
+  mangaList.forEach(manga => {
+    const card = document.createElement('div');
+    card.className = 'manga-card';
+    card.setAttribute('data-id', manga.id);
+
+    const title = appData.currentLanguage === 'de' && manga.titleDE ? manga.titleDE : manga.title;
+
+    card.innerHTML = `
+      <img class="manga-card__image" src="${manga.image}" alt="${title}">
+      <div class="manga-card__content">
+        <h4 class="manga-card__title">${title}</h4>
+        <p class="manga-card__author">${manga.author}</p>
+        
+        <div class="manga-card__genres">
+          ${manga.genre.slice(0, 3).map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
+        </div>
+        
+        <div class="manga-card__meta">
+          <div class="rating">
+            <span class="stars">★★★★★</span>
+            <span>${manga.rating.toFixed(1)}</span>
+          </div>
+          ${manga.awards.length > 0 ? `
+            <div class="award-badge">
+              ${manga.awards[0]}
+            </div>
+          ` : ''}
+          <!-- 🎯 ADD the MangaMaster Score badge! -->
+          <div class="score-badge">Score: ${manga.mangaMasterScore}</div>
+        </div>
+        
+        <div class="manga-card__actions">
+          <a href="${manga.affiliate.amazon}" class="btn affiliate-btn affiliate-btn--amazon" target="_blank">
+            ${getTranslation('buttons.buyAmazon')}
+          </a>
+          <a href="${manga.affiliate.bookshop}" class="btn affiliate-btn affiliate-btn--bookshop" target="_blank">
+            ${getTranslation('buttons.buyBookshop')}
+          </a>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
 // Search and filter manga
 function searchManga() {
     const query = DOM.searchInput.value.toLowerCase();
