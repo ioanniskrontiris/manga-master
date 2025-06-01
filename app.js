@@ -732,7 +732,9 @@ async function fetchAwardData() {
     const awardsData = data.results.bindings.map(item => ({
       title: item.mangaLabel.value,
       award: item.awardLabel.value,
-      year: item.awardYear ? item.awardYear.value : 'Unknown'
+      year: item.awardYear && item.awardYear.value
+  ? item.awardYear.value.split('T')[0]  // Just the date part
+  : 'Unknown'
     }));
 
     // Update appData.awards for consistency with your app
