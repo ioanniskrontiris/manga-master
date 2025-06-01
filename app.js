@@ -687,6 +687,11 @@ async function fetchTopManga() {
 
       return manga;
     });
+    // Normalize to 0–100 scale
+const maxScore = Math.max(...topManga.map(m => m.mangaMasterScore));
+topManga.forEach(manga => {
+  manga.mangaMasterScore = Math.round((manga.mangaMasterScore / maxScore) * 100);
+});
 
     // Update app data
     appData.featuredManga = topManga.slice(0, 3);
@@ -831,8 +836,8 @@ function calculateMangaMasterScore(manga) {
     score += freshnessBoost;
   }
 
-  // Cap at 100 for consistency
-  return Math.min(100, Math.round(score));
+  // ✅ Finally: RETURN the calculated score!
+  return Math.round(score);
 }
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', initApp);
