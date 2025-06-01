@@ -732,11 +732,12 @@ function createMangaCard(manga) {
     <p><strong>Genres:</strong> ${manga.genre.join(', ')}</p>
     <p><strong>Rating:</strong> ${manga.rating}</p>
     <p><strong>MangaMaster Score:</strong> <span class="score-badge">${manga.mangaMasterScore}</span></p>
+    <a href="${manga.affiliate.amazon}" target="_blank" class="btn btn--primary">Buy on Amazon</a>
+    <a href="${manga.affiliate.bookshop}" target="_blank" class="btn btn--secondary">Buy on Bookshop.org</a>
   `;
 
   return card;
 }
-
 async function fetchAwardData() {
   const endpointUrl = 'https://query.wikidata.org/sparql';
   const sparqlQuery = `
